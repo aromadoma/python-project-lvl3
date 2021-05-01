@@ -15,8 +15,11 @@ def make_filename(url):
 
 def download(url, directory):
     r = requests.get(url)
-    with open(os.path.join(directory, make_filename(url)), 'w') as f:
+    output_file = os.path.join(directory, make_filename(url))
+    with open(output_file, 'w') as f:
         f.write(r.text)
+
+    return output_file
 
 
 def main():
@@ -26,7 +29,7 @@ def main():
                         default=os.getcwd(),
                         help="Destination directory")
     args = parser.parse_args()
-    download(args.url, args.output)
+    print(download(args.url, args.output))
 
 
 if __name__ == '__main__':

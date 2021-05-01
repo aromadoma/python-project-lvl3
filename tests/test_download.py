@@ -14,7 +14,6 @@ def test_download():
             result = f.read()
 
     assert result == expected_result
-    # print(result == expected_result)
 
 
 if __name__ == "__main__":
