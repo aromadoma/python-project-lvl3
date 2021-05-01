@@ -1,0 +1,23 @@
+name: user-check
+on: [push]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y make
+          python3 -m pip install poetry
+          make install
+      - name: Run linter and pytest
+        run: |
+          make check
+      - name: Test & publish code coverage
+        uses: paambaati/codeclimate-action@v2.7.4
+        env:
+          CC_TEST_REPORTER_ID: 708bc940b0a4838a5d891347aee62a32e2f300fb9195be6bd6884ed017a85821
+        with:
+          coverageCommand: make test-coverage
+          debug: true
