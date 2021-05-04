@@ -2,6 +2,7 @@ import argparse
 import os
 import requests
 import re
+from bs4 import BeautifulSoup
 
 
 def make_filename(url):
@@ -11,6 +12,10 @@ def make_filename(url):
         print('URL is incorrect.')
     name = re.sub(r'\W', '-', name) + '.html'
     return name
+
+
+def download_file():
+    pass
 
 
 def download(url, directory):
