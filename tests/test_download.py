@@ -4,7 +4,6 @@ from page_loader.loader import download
 
 
 def test_download():
-    print(os.getcwd())
     url = 'https://help.hexlet.io/ru'
     with tempfile.TemporaryDirectory() as td:
         download(url, td)
