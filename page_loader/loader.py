@@ -3,47 +3,61 @@ import os
 import requests
 import re
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urljoin, urlunparse
 
 
 def make_filename(url, type='html'):
-    name = re.search(r'https?://(.*)', url).group(1)
+    name = re.search(r'//(.*)', url).group(1)
     if type == 'html':
         name = re.sub(r'\W', '-', name) + '.html'
     elif type == 'dir':
         name = re.sub(r'\W', '-', name) + '_files'
     elif type == 'resource':
         extention = re.search(r'.*\.(.*)$', name).group(1)
-        name = re.sub(f'\.{extention}$', '', name)
+        name = re.sub(fr'\.{extention}$', '', name)
         name = re.sub(r'\W', '-', name)
     return name
 
 
-def download(url, directory):
-    r = requests.get(url)
-    output_file = os.path.join(directory, make_filename(url))
+def create_dir(path, base_url):
+    if not os.path.exists(os.path.join(path, make_filename(base_url, type='dir'))):
+        os.makedirs(os.path.join(path, make_filename(base_url, type='dir')))
+
+
+def download(base_url, path):
+    """Download html document"""
+    output_file = os.path.join(path, make_filename(base_url))
     with open(output_file, 'w') as f:
-        f.write(r.text)
-    download_resources(url, directory)
+        f.write(download_resources(base_url, path))
     return output_file
 
 
-def download_resources(url, directory):
-    r = requests.get(url)
+def download_resources(base_url, path):
+    """Download local resources and return updated html document"""
+    r = requests.get(base_url)
     soup = BeautifulSoup(r.text, 'html.parser')
     for img in soup.find_all('img'):
-        link = img.get('src')
-        if is_relative_link(link):
-            link = absolute_link(link, get_domain(url))
-        if is_subdomain(url, link):
-            if not os.path.exists(os.path.join(directory,
-                                               make_filename(url, type='dir'))):
-                os.makedirs(os.path.join(directory,
-                                         make_filename(url, type='dir')))
-            image_file_path = os.path.join(directory,
-                                           make_filename(url, type='dir'),
-                                           make_filename(link, type='resource'))
-            with open(image_file_path, 'wb') as image_file:
-                image_file.write(requests.get(link).content)
+        resource_url = absolute_url(base_url, img.get('src'))
+        if is_subdomain(base_url, resource_url):
+            create_dir(path, base_url)
+            resource_file_path = os.path.join(path,
+                                              make_filename(base_url, type='dir'),
+                                              make_filename(resource_url, type='resource')
+                                              )
+            local_resource_path = os.path.join(make_filename(base_url, type='dir'),
+                                               make_filename(resource_url,
+                                                             type='resource')
+                                               )
+            with open(resource_file_path, 'wb') as f:
+                f.write(requests.get(resource_url).content)
+            # Updating local resource's URL:
+            img['src'] = local_resource_path
+
+    return soup.decode(formatter='html5')
+
+
+def get_domain(url):
+    return urlparse(url).netloc
 
 
 def is_subdomain(url1, url2):
@@ -51,21 +65,24 @@ def is_subdomain(url1, url2):
         return True
 
 
-def get_domain(url):
-    try:
-        domain = re.search(r'(?:https?:)?//(.*?)/', url).group(1)
-    except AttributeError:
-        return None
-    return domain
+def is_relative_url(url):
+    return True if not urlparse(url).netloc else False
 
 
-def is_relative_link(link):
-    search = re.search(r'^/[^/].*', link)
-    return True if search else False
+def has_no_scheme(url):
+    if not urlparse(url).scheme:
+        return True
 
 
-def absolute_link(relative_link, domain):
-    return f'http://{domain}{relative_link}'
+def absolute_url(base_url, url):
+    if is_relative_url(url):
+        return urljoin(base_url, url)
+    if has_no_scheme(url):
+        u_base = urlparse(base_url)
+        u = urlparse(url)
+        return urlunparse([u_base.scheme, u.netloc, u.path,
+                           u.params, u.query, u.fragment])
+    return url
 
 
 def is_invalid_url(url):
@@ -86,8 +103,6 @@ def main():
     args = parser.parse_args()
     if not is_invalid_url(args.url):
         print(download(args.url, args.output))
-    else:
-        print('URL is not valid')
 
 
 if __name__ == '__main__':
