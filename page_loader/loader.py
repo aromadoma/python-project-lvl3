@@ -33,12 +33,25 @@ def download(base_url, path):
     return output_file
 
 
+def get_resource_url(tag):
+    """Return URL from tag"""
+    if tag.name in ['img', 'script']:
+        return tag.get('src')
+    if tag.name == 'link':
+        return tag.get('href')
+
+
+def download_resource(url):
+    if get_resource_url(url):   # If link exists
+
+
+
 def download_resources(base_url, path):
     """Download local resources and return updated html document"""
     r = requests.get(base_url)
     soup = BeautifulSoup(r.text, 'html.parser')
     for img in soup.find_all('img'):
-        resource_url = absolute_url(base_url, img.get('src'))
+        resource_url = absolute_url(base_url, get_resource_url(img))
         if is_subdomain(base_url, resource_url):
             create_dir(path, base_url)
             resource_file_path = os.path.join(path,
