@@ -20,7 +20,8 @@ def make_filename(url, type='html'):
 
 
 def create_dir(path, base_url):
-    if not os.path.exists(os.path.join(path, make_filename(base_url, type='dir'))):
+    if not os.path.exists(os.path.join(path,
+                                       make_filename(base_url, type='dir'))):
         os.makedirs(os.path.join(path, make_filename(base_url, type='dir')))
 
 
@@ -41,10 +42,13 @@ def download_resources(base_url, path):
         if is_subdomain(base_url, resource_url):
             create_dir(path, base_url)
             resource_file_path = os.path.join(path,
-                                              make_filename(base_url, type='dir'),
-                                              make_filename(resource_url, type='resource')
+                                              make_filename(base_url,
+                                                            type='dir'),
+                                              make_filename(resource_url,
+                                                            type='resource')
                                               )
-            local_resource_path = os.path.join(make_filename(base_url, type='dir'),
+            local_resource_path = os.path.join(make_filename(base_url,
+                                                             type='dir'),
                                                make_filename(resource_url,
                                                              type='resource')
                                                )
@@ -53,7 +57,7 @@ def download_resources(base_url, path):
             # Updating local resource's URL:
             img['src'] = local_resource_path
 
-    return soup.decode(formatter='html5')
+    return soup.prettify(formatter='html5')
 
 
 def get_domain(url):

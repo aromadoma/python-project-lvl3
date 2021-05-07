@@ -7,7 +7,8 @@ def test_download():
     url = 'https://help.hexlet.io/ru'
     with tempfile.TemporaryDirectory() as td:
         download(url, td)
-        with open(os.path.join(os.path.dirname(__file__), 'fixtures/result.html')) as f:
+        with open(os.path.join(os.path.dirname(__file__),
+                               'fixtures/result.html')) as f:
             expected_result = f.read()
         with open(os.path.join(td, 'help-hexlet-io-ru.html')) as f:
             result = f.read()
