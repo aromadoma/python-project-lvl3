@@ -42,8 +42,7 @@ def get_resource_url(tag):
 
 
 def download_resource(url):
-    if get_resource_url(url):   # If link exists
-
+    pass
 
 
 def download_resources(base_url, path):
